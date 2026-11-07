@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Laurels & Milestones &mdash; The Scholar's Ledger{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+  <!-- Inscribe Milestone Form -->
+  <div class="card">
+    <div class="card-title">✦ Inscribe Academic Milestone</div>
+    <form action="{{ url_for('milestone_add') }}" method="POST">
+      <div class="form-group">
+        <label class="form-label">Milestone / Exam Title</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g. Mastered Computability & Turing Equivalence" required>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Discipline</label>
+          <input type="text" name="subject" class="form-control" placeholder="e.g. Algorithmic Complexity" required list="subject-list-m">
+          <datalist id="subject-list-m">
+            {% for s in subjects %}
+              <option value="{{ s.name }}"></option>
+            {% endfor %}
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Date</label>
+          <input type="text" name="target_date" class="form-control" placeholder="+2w, YYYY-MM-DD" value="+2w" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description / Syllabus Objectives (Optional)</label>
+        <textarea name="description" class="form-control" placeholder="Detailed criteria or oral defense requirements"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-gold" style="width: 100%;">Inscribe Milestone</button>
+    </form>
+  </div>
+
+  <!-- Laurels Summary Card -->
+  <div class="card">
+    <div class="card-title">✦ Scholarly Laurels Status</div>
+    <div class="stat-ribbon" style="margin-bottom: 1.25rem;">
+      <div class="stat-label">Laurels Achieved</div>
+      <div class="stat-value gold">
+        {{ milestones|selectattr('achieved', 'equalto', True)|list|length }} / {{ milestones|length }}
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">Major academic milestones completed</div>
+    </div>
+    <p style="color: var(--text-muted); font-style: italic; font-size: 0.95rem; line-height: 1.6;">
+      "Ad astra per aspera" &mdash; Through hardships to the stars. Track key milestone deadlines, dissertation stages, and oral exam preparations.
+    </p>
+  </div>
+</div>
+
+<!-- Milestones Table -->
+<div class="card">
+  <div class="card-title">
+    <span>✦ Inscribed Academic Laurels & Milestones</span>
+  </div>
+
+  {% if milestones %}
+    <div class="table-responsive">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th style="width: 60px; text-align: center;">Ref #</th>
+            <th>Milestone Title</th>
+            <th style="width: 180px;">Discipline</th>
+            <th style="width: 120px; text-align: center;">Target Date</th>
+            <th style="width: 140px; text-align: center;">Status</th>
+            <th>Description / Objectives</th>
+            <th style="width: 120px; text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in milestones %}
+            <tr>
+              <td style="text-align: center; font-family: var(--font-mono); color: var(--text-gold);">{{ m.id }}</td>
+              <td style="font-weight: 700; {% if m.achieved %}text-decoration: line-through; opacity: 0.6;{% endif %}">
+                {{ m.title }}
+              </td>
+              <td style="color: var(--color-azure); font-weight: 600;">{{ m.subject }}</td>
+              <td style="text-align: center; font-family: var(--font-mono); color: var(--text-amber);">{{ m.target_date }}</td>
+              <td style="text-align: center;">
+                {% if m.achieved %}
+                  <span class="badge badge-completed">🏆 Achieved</span>
+                {% else %}
+                  <span class="badge badge-pending">⏳ Pending</span>
+                {% endif %}
+              </td>
+              <td style="font-style: italic; color: var(--text-muted); font-size: 0.9rem;">{{ m.description or "—" }}</td>
+              <td style="text-align: center;">
+                <div style="display: flex; gap: 0.35rem; justify-content: center;">
+                  {% if not m.achieved %}
+                    <form action="{{ url_for('milestone_achieve', milestone_id=m.id) }}" method="POST" style="display:inline;">
+                      <button type="submit" class="btn btn-sm btn-gold" title="Award Laurels">🏆</button>
+                    </form>
+                  {% endif %}
+                  <form action="{{ url_for('milestone_delete', milestone_id=m.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Confirm deletion of Milestone #{{ m.id }}?');">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">✕</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 2rem;">
+      No academic milestones inscribed yet. Create one above to track major syllabus goals.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

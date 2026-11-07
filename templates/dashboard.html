@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard &mdash; The Scholar's Ledger{% endblock %}
+
+{% block content %}
+<!-- Scholarly Streak & Summary Ribbon -->
+<div class="grid-4" style="margin-bottom: 1.5rem;">
+  <div class="stat-ribbon">
+    <div class="stat-label">Scholarly Streak</div>
+    <div class="stat-value gold">
+      {% if stats.current_streak > 0 %}🔥 {{ stats.current_streak }}d{% else %}❄️ 0d{% endif %}
+    </div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Record: {{ stats.longest_streak }} days</div>
+  </div>
+
+  <div class="stat-ribbon">
+    <div class="stat-label">Lifetime Study</div>
+    <div class="stat-value sage">{{ stats.total_lifetime_hours }}h</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Across {{ stats.subjects_count }} disciplines</div>
+  </div>
+
+  <div class="stat-ribbon">
+    <div class="stat-label">Studied This Week</div>
+    <div class="stat-value">{{ stats.this_week_hours }}h</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Today: {{ stats.today_hours }}h</div>
+  </div>
+
+  <div class="stat-ribbon">
+    <div class="stat-label">Tasks Completed</div>
+    <div class="stat-value laurel">{{ stats.total_tasks_completed }}</div>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">{{ stats.total_tasks_pending }} pending</div>
+  </div>
+</div>
+
+<!-- Quick Action Shortcuts -->
+<div class="card" style="padding: 1rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between;">
+  <div style="font-family: var(--font-heading); color: var(--text-gold); font-size: 0.95rem;">✦ Quick Scholar Actions:</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+    <a href="#inscribe-section" class="btn btn-gold btn-sm">🖋️ Inscribe Task</a>
+    <a href="#log-hours-section" class="btn btn-sm">⏱️ Log Study Hours</a>
+    <a href="{{ url_for('timer_view') }}" class="btn btn-sm">⏳ Focus Hourglass</a>
+    <a href="{{ url_for('daily_view') }}" class="btn btn-sm">📅 Daily View</a>
+    <a href="{{ url_for('weekly_view') }}" class="btn btn-sm">📆 Weekly Schedule</a>
+  </div>
+</div>
+
+<!-- Grid: Discipline Progress & Quick Inscription Form -->
+<div class="grid-2">
+  <!-- Discipline Progress Bars -->
+  <div class="card">
+    <div class="card-title">
+      <span>✦ Weekly Target Fulfillment</span>
+      <a href="{{ url_for('analytics_view') }}" style="font-size: 0.8rem;">View All &rarr;</a>
+    </div>
+    {% if stats.subject_breakdowns %}
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for s in stats.subject_breakdowns %}
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span style="font-weight: 600; color: var(--color-azure);">{{ s.subject }}</span>
+              <span style="font-family: var(--font-mono); color: var(--text-muted);">
+                {{ s.weekly_hours_logged }}h / {{ s.weekly_target_hours }}h target
+                <strong style="color: var(--text-gold); margin-left: 0.4rem;">({{ s.weekly_hours_pct }}%)</strong>
+              </span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" style="width: {{ [s.weekly_hours_pct, 100]|min }}%;"></div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: var(--text-muted); font-style: italic;">No disciplines registered yet. Inscribe your first task or seed sample data below.</p>
+    {% endif %}
+  </div>
+
+  <!-- Inscribe Task Form -->
+  <div class="card" id="inscribe-section">
+    <div class="card-title">
+      <span>✦ Inscribe New Assignment</span>
+    </div>
+    <form action="{{ url_for('task_add') }}" method="POST">
+      <div class="grid-2" style="gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label">Discipline / Subject</label>
+          <input type="text" name="subject" class="form-control" placeholder="e.g. Algorithmic Complexity" required list="subject-list">
+          <datalist id="subject-list">
+            {% for s in subjects %}
+              <option value="{{ s.name }}"></option>
+            {% endfor %}
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deadline</label>
+          <input type="text" name="deadline" class="form-control" placeholder="today, tomorrow, +3d, YYYY-MM-DD" value="today" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Topic / Assignment Name</label>
+        <input type="text" name="topic" class="form-control" placeholder="e.g. Master Tarjan SCC Algorithm" required>
+      </div>
+
+      <div class="grid-2" style="gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select name="priority" class="form-control">
+            <option value="High">▲ High Priority</option>
+            <option value="Medium" selected>■ Medium Priority</option>
+            <option value="Low">▽ Low Priority</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estimated Hours</label>
+          <input type="number" step="0.5" min="0.1" name="estimated_hours" class="form-control" value="1.5">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Scholarly Notes / Reference (Optional)</label>
+        <input type="text" name="notes" class="form-control" placeholder="e.g. CLRS Chapter 22">
+      </div>
+
+      <button type="submit" class="btn btn-gold" style="width: 100%;">Inscribe Into Ledger</button>
+    </form>
+  </div>
+</div>
+
+<!-- Active Ledger Tasks -->
+<div class="card">
+  <div class="card-title">
+    <span>✦ Active Tasks & Syllabus Deadlines</span>
+    <span style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-body);">Showing top active assignments</span>
+  </div>
+
+  {% if active_tasks %}
+    <div class="table-responsive">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th style="width: 60px; text-align: center;">Ref #</th>
+            <th>Discipline</th>
+            <th>Topic / Assignment</th>
+            <th style="width: 110px; text-align: center;">Deadline</th>
+            <th style="width: 100px; text-align: center;">Priority</th>
+            <th style="width: 110px; text-align: center;">Status</th>
+            <th style="width: 80px; text-align: right;">Est.</th>
+            <th style="width: 160px; text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in active_tasks %}
+            <tr>
+              <td style="text-align: center; font-family: var(--font-mono); color: var(--text-gold);">{{ t.id }}</td>
+              <td style="font-weight: 600; color: var(--color-azure);">{{ t.subject }}</td>
+              <td>
+                <span style="{% if t.status.value == 'Completed' %}text-decoration: line-through; opacity: 0.6;{% endif %}">{{ t.topic }}</span>
+                {% if t.notes %}
+                  <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">↳ {{ t.notes }}</div>
+                {% endif %}
+              </td>
+              <td style="text-align: center; font-family: var(--font-mono);">
+                {% if t.is_overdue %}
+                  <span style="color: var(--color-crimson); font-weight: 700;">{{ t.deadline }} ⚠</span>
+                {% elif t.is_due_today %}
+                  <span style="color: var(--text-gold); font-weight: 700;">{{ t.deadline }} ★</span>
+                {% else %}
+                  <span style="color: var(--text-muted);">{{ t.deadline }}</span>
+                {% endif %}
+              </td>
+              <td style="text-align: center;">
+                {% if t.priority.value == 'High' %}
+                  <span class="badge badge-high">▲ High</span>
+                {% elif t.priority.value == 'Medium' %}
+                  <span class="badge badge-medium">■ Med</span>
+                {% else %}
+                  <span class="badge badge-low">▽ Low</span>
+                {% endif %}
+              </td>
+              <td style="text-align: center;">
+                {% if t.status.value == 'Completed' %}
+                  <span class="badge badge-completed">✓ Done</span>
+                {% elif t.status.value == 'In Progress' %}
+                  <span class="badge badge-progress">◐ In Prog</span>
+                {% else %}
+                  <span class="badge badge-pending">○ Pending</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right; font-family: var(--font-mono); color: var(--text-amber);">{{ t.estimated_hours }}h</td>
+              <td style="text-align: center;">
+                <div style="display: flex; gap: 0.35rem; justify-content: center;">
+                  {% if t.status.value != 'Completed' %}
+                    <form action="{{ url_for('task_toggle_status', task_id=t.id) }}" method="POST" style="display:inline;">
+                      <input type="hidden" name="status" value="Completed">
+                      <button type="submit" class="btn btn-sm" title="Mark Completed">✓</button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('task_toggle_status', task_id=t.id) }}" method="POST" style="display:inline;">
+                      <input type="hidden" name="status" value="Pending">
+                      <button type="submit" class="btn btn-sm" title="Reopen">↺</button>
+                    </form>
+                  {% endif %}
+                  <a href="{{ url_for('task_edit_view', task_id=t.id) }}" class="btn btn-sm" title="Edit">✎</a>
+                  <form action="{{ url_for('task_delete', task_id=t.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Confirm deletion of Task #{{ t.id }}?');">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">✕</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 2rem;">
+      Your active ledger has no pending tasks! Inscribe a new study session above or seed the sample curriculum.
+    </p>
+  {% endif %}
+</div>
+
+<!-- Log Study Hours Section -->
+<div class="card" id="log-hours-section">
+  <div class="card-title">
+    <span>✦ Log Completed Study Hours</span>
+    <span style="font-size: 0.85rem; color: var(--color-sage);">Directly extends your daily streak 🔥</span>
+  </div>
+  <form action="{{ url_for('log_study') }}" method="POST">
+    <div class="grid-3">
+      <div class="form-group">
+        <label class="form-label">Discipline Studied</label>
+        <input type="text" name="subject" class="form-control" placeholder="e.g. Algorithmic Complexity" required list="subject-list-log">
+        <datalist id="subject-list-log">
+          {% for s in subjects %}
+            <option value="{{ s.name }}"></option>
+          {% endfor %}
+        </datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topic / Focus Chapter</label>
+        <input type="text" name="topic" class="form-control" placeholder="e.g. Tarjan SCC Implementation" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hours Spent</label>
+        <input type="number" step="0.25" min="0.1" max="24" name="hours" class="form-control" value="1.5" required>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Session Date</label>
+        <input type="text" name="date" class="form-control" value="today" placeholder="today, yesterday, YYYY-MM-DD">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reflections / Key Takeaways (Optional)</label>
+        <input type="text" name="notes" class="form-control" placeholder="e.g. Derived asymptotic runtime proof">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-gold" style="width: 100%;">Inscribe Hours Into Ledger</button>
+  </form>
+</div>
+{% endblock %}

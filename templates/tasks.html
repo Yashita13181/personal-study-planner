@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Active Ledger &mdash; The Scholar's Ledger{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-title">
+    <span>✦ Academic Ledger: Syllabus Tasks & Deadlines</span>
+    <a href="{{ url_for('dashboard') }}#inscribe-section" class="btn btn-gold btn-sm">+ Inscribe New Task</a>
+  </div>
+
+  <!-- Filter Buttons -->
+  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; align-items: center;">
+    <span style="font-family: var(--font-heading); color: var(--text-gold); font-size: 0.85rem;">Filter by:</span>
+    <a href="{{ url_for('tasks_view') }}" class="btn btn-sm {% if not filter_status and not filter_subject %}btn-gold{% endif %}">All ({{ tasks|length }})</a>
+    <a href="{{ url_for('tasks_view', status='Pending') }}" class="btn btn-sm {% if filter_status == 'Pending' %}btn-gold{% endif %}">Pending</a>
+    <a href="{{ url_for('tasks_view', status='In Progress') }}" class="btn btn-sm {% if filter_status == 'In Progress' %}btn-gold{% endif %}">In Progress</a>
+    <a href="{{ url_for('tasks_view', status='Completed') }}" class="btn btn-sm {% if filter_status == 'Completed' %}btn-gold{% endif %}">Completed</a>
+    <a href="{{ url_for('tasks_view', overdue='1') }}" class="btn btn-sm btn-danger {% if filter_overdue %}btn-gold{% endif %}">⚠ Overdue Only</a>
+  </div>
+
+  {% if tasks %}
+    <div class="table-responsive">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th style="width: 60px; text-align: center;">Ref #</th>
+            <th>Discipline</th>
+            <th>Topic / Assignment</th>
+            <th style="width: 110px; text-align: center;">Deadline</th>
+            <th style="width: 100px; text-align: center;">Priority</th>
+            <th style="width: 110px; text-align: center;">Status</th>
+            <th style="width: 80px; text-align: right;">Est.</th>
+            <th style="width: 160px; text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tasks %}
+            <tr>
+              <td style="text-align: center; font-family: var(--font-mono); color: var(--text-gold);">{{ t.id }}</td>
+              <td style="font-weight: 600; color: var(--color-azure);">{{ t.subject }}</td>
+              <td>
+                <span style="{% if t.status.value == 'Completed' %}text-decoration: line-through; opacity: 0.6;{% endif %}">{{ t.topic }}</span>
+                {% if t.notes %}
+                  <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">↳ {{ t.notes }}</div>
+                {% endif %}
+              </td>
+              <td style="text-align: center; font-family: var(--font-mono);">
+                {% if t.is_overdue %}
+                  <span style="color: var(--color-crimson); font-weight: 700;">{{ t.deadline }} ⚠</span>
+                {% elif t.is_due_today %}
+                  <span style="color: var(--text-gold); font-weight: 700;">{{ t.deadline }} ★</span>
+                {% else %}
+                  <span style="color: var(--text-muted);">{{ t.deadline }}</span>
+                {% endif %}
+              </td>
+              <td style="text-align: center;">
+                {% if t.priority.value == 'High' %}
+                  <span class="badge badge-high">▲ High</span>
+                {% elif t.priority.value == 'Medium' %}
+                  <span class="badge badge-medium">■ Med</span>
+                {% else %}
+                  <span class="badge badge-low">▽ Low</span>
+                {% endif %}
+              </td>
+              <td style="text-align: center;">
+                {% if t.status.value == 'Completed' %}
+                  <span class="badge badge-completed">✓ Done</span>
+                {% elif t.status.value == 'In Progress' %}
+                  <span class="badge badge-progress">◐ In Prog</span>
+                {% else %}
+                  <span class="badge badge-pending">○ Pending</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right; font-family: var(--font-mono); color: var(--text-amber);">{{ t.estimated_hours }}h</td>
+              <td style="text-align: center;">
+                <div style="display: flex; gap: 0.35rem; justify-content: center;">
+                  {% if t.status.value != 'Completed' %}
+                    <form action="{{ url_for('task_toggle_status', task_id=t.id) }}" method="POST" style="display:inline;">
+                      <input type="hidden" name="status" value="Completed">
+                      <button type="submit" class="btn btn-sm" title="Mark Completed">✓</button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('task_toggle_status', task_id=t.id) }}" method="POST" style="display:inline;">
+                      <input type="hidden" name="status" value="Pending">
+                      <button type="submit" class="btn btn-sm" title="Reopen">↺</button>
+                    </form>
+                  {% endif %}
+                  <a href="{{ url_for('task_edit_view', task_id=t.id) }}" class="btn btn-sm" title="Edit">✎</a>
+                  <form action="{{ url_for('task_delete', task_id=t.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Confirm deletion of Task #{{ t.id }}?');">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">✕</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 2rem;">
+      No tasks match the selected filter criteria.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

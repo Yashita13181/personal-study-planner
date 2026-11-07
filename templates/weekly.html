@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Weekly Curriculum &mdash; The Scholar's Ledger{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-title">
+    <span>✦ Weekly Curriculum Schedule: {{ weekly_data.week_str }}</span>
+    <form method="GET" action="{{ url_for('weekly_view') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+      <input type="text" name="date" class="form-control" style="width: 170px; padding: 0.35rem 0.6rem; font-size: 0.85rem;" value="{{ weekly_data.monday.isoformat() }}" placeholder="YYYY-MM-DD or today">
+      <button type="submit" class="btn btn-sm btn-gold">Inspect Week</button>
+    </form>
+  </div>
+
+  <!-- Summary Banner -->
+  <div style="background-color: var(--bg-card-hover); border: 1px solid var(--border-gold); border-radius: 4px; padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span style="font-family: var(--font-heading); color: var(--text-gold);">Weekly Study Volume:</span>
+      <span style="font-size: 1.4rem; font-family: var(--font-mono); font-weight: 700; color: var(--color-sage); margin-left: 0.5rem;">{{ weekly_data.total_hours }} hours</span>
+    </div>
+    <div>
+      <span style="font-family: var(--font-heading); color: var(--text-gold);">Deadlines Scheduled:</span>
+      <span style="font-size: 1.4rem; font-family: var(--font-mono); font-weight: 700; color: var(--text-amber); margin-left: 0.5rem;">{{ weekly_data.total_tasks_due }} tasks</span>
+    </div>
+  </div>
+
+  <!-- Weekly Monday to Sunday Table -->
+  <div class="table-responsive" style="margin-bottom: 1.5rem;">
+    <table class="ledger-table">
+      <thead>
+        <tr>
+          <th style="width: 140px;">Day of Week</th>
+          <th style="width: 120px; text-align: center;">Calendar Date</th>
+          <th style="width: 130px; text-align: center;">Study Hours</th>
+          <th>Deadlines & Scheduled Topics</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in weekly_data.days %}
+          <tr style="{% if d.is_today %}background-color: rgba(212, 175, 55, 0.08); border-left: 3px solid var(--text-gold);{% endif %}">
+            <td style="font-family: var(--font-heading); font-weight: 700; color: {% if d.is_today %}var(--text-gold){% else %}var(--text-parchment){% endif %};">
+              {% if d.is_today %}★ {% endif %}{{ d.day_name }}
+            </td>
+            <td style="text-align: center; font-family: var(--font-mono); color: var(--text-muted);">{{ d.date_str }}</td>
+            <td style="text-align: center; font-family: var(--font-mono); font-weight: 700; color: {% if d.hours > 0 %}var(--color-sage){% else %}var(--text-muted){% endif %};">
+              {{ d.hours }}h
+            </td>
+            <td>
+              {% if d.tasks %}
+                <ul style="list-style: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem;">
+                  {% for t in d.tasks %}
+                    <li style="font-size: 0.9rem;">
+                      <span style="color: var(--color-azure); font-weight: 600;">[{{ t.subject }}]</span>
+                      <span style="{% if t.status.value == 'Completed' %}text-decoration: line-through; opacity: 0.6;{% endif %}">{{ t.topic }}</span>
+                      {% if t.status.value == 'Completed' %}
+                        <span style="color: var(--color-laurel); font-size: 0.8rem;">✓ Done</span>
+                      {% else %}
+                        <span style="color: var(--text-amber); font-size: 0.8rem;">(Ref #{{ t.id }})</span>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span style="color: var(--text-muted); font-style: italic; font-size: 0.85rem;">— No assignments due —</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Weekly Discipline Breakdown -->
+  {% if weekly_data.subject_breakdown %}
+    <div class="card" style="margin-bottom: 0; background-color: #171512;">
+      <div class="card-title" style="margin-bottom: 0.75rem;">✦ Weekly Discipline Breakdown</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+        {% for subj, hrs in weekly_data.subject_breakdown.items() %}
+          <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 1rem;">
+            <div style="font-weight: 600; color: var(--color-azure); font-size: 0.9rem;">{{ subj }}</div>
+            <div style="font-family: var(--font-mono); color: var(--color-sage); font-size: 1.1rem; font-weight: 700;">{{ hrs }}h</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

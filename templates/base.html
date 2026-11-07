@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}The Scholar's Ledger{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #141311;
+      --bg-card: #1f1d19;
+      --bg-card-hover: #292621;
+      --bg-input: #171613;
+      --border-color: #3d372e;
+      --border-gold: #8c7b64;
+      --text-gold: #d4af37;
+      --text-amber: #e6c280;
+      --text-parchment: #f4ede2;
+      --text-muted: #a39886;
+      --color-crimson: #c85a5a;
+      --color-azure: #6b8eae;
+      --color-sage: #7e9f76;
+      --color-laurel: #5b8a62;
+      --font-heading: 'Cinzel', Georgia, serif;
+      --font-body: 'EB Garamond', Georgia, serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-parchment);
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: var(--text-amber); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--text-gold); }
+
+    /* Header Banner */
+    header.scholar-header {
+      border-bottom: 2px solid var(--border-color);
+      background: linear-gradient(180deg, #1a1815 0%, #141311 100%);
+      padding: 1.5rem 1rem 1rem;
+      text-align: center;
+      position: relative;
+    }
+    .header-border-top {
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, var(--text-gold) 50%, transparent 100%);
+      margin-bottom: 0.75rem;
+    }
+    .motto-banner {
+      font-family: var(--font-heading);
+      letter-spacing: 0.15em;
+      color: var(--text-gold);
+      font-size: 1.6rem;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .sub-motto {
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Navigation Bar */
+    nav.scholar-nav {
+      background-color: #1a1815;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    nav.scholar-nav a {
+      color: var(--text-parchment);
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 0.8rem;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: all 0.2s ease;
+    }
+    nav.scholar-nav a:hover, nav.scholar-nav a.active {
+      background-color: var(--bg-card);
+      border-color: var(--border-gold);
+      color: var(--text-gold);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+      flex: 1;
+    }
+
+    /* Flash Alerts */
+    .flash-messages { margin-bottom: 1.5rem; }
+    .alert {
+      padding: 0.8rem 1.2rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .alert-success {
+      background-color: rgba(91, 138, 98, 0.18);
+      border: 1px solid var(--color-laurel);
+      color: #9fe0a8;
+    }
+    .alert-error {
+      background-color: rgba(200, 90, 90, 0.18);
+      border: 1px solid var(--color-crimson);
+      color: #f7a8a8;
+    }
+    .alert-warning {
+      background-color: rgba(230, 194, 128, 0.18);
+      border: 1px solid var(--text-gold);
+      color: var(--text-amber);
+    }
+
+    /* Cards & Panels */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .card-title {
+      font-family: var(--font-heading);
+      color: var(--text-gold);
+      font-size: 1.15rem;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Grid helpers */
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+
+    /* Streak & Stat Ribbons */
+    .stat-ribbon {
+      background: linear-gradient(135deg, #25221d 0%, #1c1a17 100%);
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-label {
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-parchment);
+      font-family: var(--font-mono);
+      margin-top: 0.2rem;
+    }
+    .stat-value.gold { color: var(--text-gold); }
+    .stat-value.sage { color: var(--color-sage); }
+    .stat-value.crimson { color: var(--color-crimson); }
+
+    /* Academic Ledger Table */
+    .table-responsive { width: 100%; overflow-x: auto; }
+    table.ledger-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    table.ledger-table th {
+      background-color: #171512;
+      color: var(--text-gold);
+      font-family: var(--font-heading);
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.75rem 0.6rem;
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
+    table.ledger-table td {
+      padding: 0.75rem 0.6rem;
+      border: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    table.ledger-table tr:hover { background-color: var(--bg-card-hover); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-high { background-color: rgba(200, 90, 90, 0.25); color: #f28b82; border: 1px solid var(--color-crimson); }
+    .badge-medium { background-color: rgba(212, 175, 55, 0.25); color: var(--text-amber); border: 1px solid var(--text-gold); }
+    .badge-low { background-color: rgba(126, 159, 118, 0.25); color: #a8d59d; border: 1px solid var(--color-sage); }
+    .badge-completed { background-color: rgba(91, 138, 98, 0.25); color: #81c995; border: 1px solid var(--color-laurel); }
+    .badge-progress { background-color: rgba(107, 142, 174, 0.25); color: #8ab4f8; border: 1px solid var(--color-azure); }
+    .badge-pending { background-color: rgba(212, 155, 75, 0.25); color: #fdd663; border: 1px solid #d49b4b; }
+
+    /* Progress Bar */
+    .progress-bar-container {
+      background-color: #161513;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      height: 14px;
+      width: 100%;
+      overflow: hidden;
+      margin-top: 0.25rem;
+      position: relative;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #997b26 0%, var(--text-gold) 100%);
+      transition: width 0.3s ease;
+    }
+    .progress-bar-fill.laurel {
+      background: linear-gradient(90deg, #3d6343 0%, var(--color-laurel) 100%);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.5rem 1rem;
+      border-radius: 3px;
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-transform: uppercase;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-card);
+      color: var(--text-parchment);
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background-color: #2e2b26;
+      border-color: var(--border-gold);
+      color: var(--text-gold);
+    }
+    .btn-gold {
+      background: linear-gradient(180deg, #d4af37 0%, #b89228 100%);
+      color: #171512 !important;
+      font-weight: 700;
+      border-color: #f3ca52;
+    }
+    .btn-gold:hover {
+      background: linear-gradient(180deg, #e6c280 0%, #d4af37 100%);
+      color: #000 !important;
+    }
+    .btn-sm { padding: 0.25rem 0.55rem; font-size: 0.78rem; }
+    .btn-danger {
+      background-color: rgba(200, 90, 90, 0.15);
+      border-color: var(--color-crimson);
+      color: #f7a8a8;
+    }
+    .btn-danger:hover {
+      background-color: var(--color-crimson);
+      color: #fff;
+    }
+
+    /* Forms */
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      color: var(--text-gold);
+      letter-spacing: 0.04em;
+    }
+    .form-control {
+      width: 100%;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      padding: 0.6rem 0.8rem;
+      color: var(--text-parchment);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus {
+      border-color: var(--text-gold);
+      box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+    }
+    select.form-control { cursor: pointer; }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+
+    /* Footer */
+    footer.scholar-footer {
+      border-top: 1px solid var(--border-color);
+      background-color: #12110f;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .motto-banner { font-size: 1.25rem; }
+      nav.scholar-nav { flex-direction: column; align-items: stretch; }
+      nav.scholar-nav a { justify-content: center; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header class="scholar-header">
+    <div class="header-border-top"></div>
+    <div class="motto-banner">✦ The Scholar's Academic Ledger ✦</div>
+    <div class="sub-motto">Personal Study Planner & Progress Analytics Journal &mdash; &laquo; Nulla dies sine linea &raquo;</div>
+  </header>
+
+  <nav class="scholar-nav">
+    <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">📖 Dashboard</a>
+    <a href="{{ url_for('tasks_view') }}" class="{% if request.endpoint == 'tasks_view' %}active{% endif %}">🖋️ Active Ledger</a>
+    <a href="{{ url_for('daily_view') }}" class="{% if request.endpoint == 'daily_view' %}active{% endif %}">📅 Daily Journal</a>
+    <a href="{{ url_for('weekly_view') }}" class="{% if request.endpoint == 'weekly_view' %}active{% endif %}">📆 Weekly Curriculum</a>
+    <a href="{{ url_for('analytics_view') }}" class="{% if request.endpoint == 'analytics_view' %}active{% endif %}">📊 Progress & Streaks</a>
+    <a href="{{ url_for('milestones_view') }}" class="{% if request.endpoint == 'milestones_view' %}active{% endif %}">🏆 Laurels (Milestones)</a>
+    <a href="{{ url_for('timer_view') }}" class="{% if request.endpoint == 'timer_view' %}active{% endif %}">⏳ Focus Hourglass</a>
+    <a href="{{ url_for('backup_view') }}" class="{% if request.endpoint == 'backup_view' %}active{% endif %}">💾 Backup & Sync</a>
+  </nav>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'message' else 'warning' }}">
+              <span>{{ message }}</span>
+              <button onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer; font-size:1.1rem;">&times;</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="scholar-footer">
+    <p>The Scholar's Ledger &copy; {{ now_year }} &mdash; Crafted for serious study, contemplation, and deliberate focus.</p>
+    <p style="margin-top: 0.35rem; font-size: 0.78rem; opacity: 0.75;">Running in production mode. Data securely persisted to SQLite ledger.</p>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

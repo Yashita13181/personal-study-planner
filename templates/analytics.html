@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Progress & Streak Analytics &mdash; The Scholar's Ledger{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-title">
+    <span>✦ Scholarly Progress & Streak Analytics</span>
+  </div>
+
+  <!-- Primary Streak Ribbon -->
+  <div style="background: linear-gradient(135deg, #2b2721 0%, #1a1815 100%); border: 2px solid var(--text-gold); border-radius: 6px; padding: 1.5rem; margin-bottom: 2rem; text-align: center;">
+    <div style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--text-gold); letter-spacing: 0.1em; text-transform: uppercase;">
+      ✦ Active Scholarly Habit & Streak ✦
+    </div>
+    <div style="font-size: 3rem; font-weight: 800; font-family: var(--font-mono); margin: 0.5rem 0; color: var(--text-parchment);">
+      {% if stats.current_streak > 0 %}🔥 {{ stats.current_streak }} Days{% else %}❄️ 0 Days{% endif %}
+    </div>
+    <p style="color: var(--text-muted); font-style: italic; max-width: 600px; margin: 0 auto;">
+      {% if stats.current_streak > 0 %}
+        Your scholarly discipline burns bright. Log at least one session every calendar day to keep the flame alive.
+      {% else %}
+        No active streak today. Inscribe completed study hours to initiate a new scholarly streak.
+      {% endif %}
+    </p>
+  </div>
+
+  <!-- Global Metrics Grid -->
+  <div class="grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-ribbon">
+      <div class="stat-label">All-Time Record Streak</div>
+      <div class="stat-value gold">{{ stats.longest_streak }}d</div>
+    </div>
+    <div class="stat-ribbon">
+      <div class="stat-label">Total Lifetime Hours</div>
+      <div class="stat-value sage">{{ stats.total_lifetime_hours }}h</div>
+    </div>
+    <div class="stat-ribbon">
+      <div class="stat-label">Hours Logged Today</div>
+      <div class="stat-value">{{ stats.today_hours }}h</div>
+    </div>
+    <div class="stat-ribbon">
+      <div class="stat-label">Hours Logged This Week</div>
+      <div class="stat-value">{{ stats.this_week_hours }}h</div>
+    </div>
+  </div>
+
+  <!-- Discipline-by-Discipline Progress Ledger -->
+  <h3 style="font-family: var(--font-heading); color: var(--text-gold); font-size: 1.15rem; margin-bottom: 1rem;">
+    ✦ Discipline Syllabus Rate & Weekly Targets
+  </h3>
+  {% if stats.subject_breakdowns %}
+    <div class="table-responsive">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>Academic Discipline</th>
+            <th style="width: 140px; text-align: center;">Task Completion</th>
+            <th style="width: 200px;">Syllabus Rate</th>
+            <th style="width: 130px; text-align: center;">Week Hours</th>
+            <th style="width: 120px; text-align: center;">Weekly Goal</th>
+            <th style="width: 200px;">Target Fulfillment</th>
+            <th style="width: 120px; text-align: right;">Lifetime</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in stats.subject_breakdowns %}
+            <tr>
+              <td style="font-weight: 700; color: var(--color-azure);">{{ s.subject }}</td>
+              <td style="text-align: center; font-family: var(--font-mono);">
+                {{ s.completed_tasks }} / {{ s.total_tasks }}
+              </td>
+              <td>
+                <div style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); display: flex; justify-content: space-between;">
+                  <span>{{ s.task_completion_pct }}%</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill laurel" style="width: {{ s.task_completion_pct }}%;"></div>
+                </div>
+              </td>
+              <td style="text-align: center; font-family: var(--font-mono); font-weight: 700; color: var(--color-sage);">
+                {{ s.weekly_hours_logged }}h
+              </td>
+              <td style="text-align: center; font-family: var(--font-mono); color: var(--text-amber);">
+                {{ s.weekly_target_hours }}h
+              </td>
+              <td>
+                <div style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); display: flex; justify-content: space-between;">
+                  <span>{{ s.weekly_hours_pct }}%</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" style="width: {{ [s.weekly_hours_pct, 100]|min }}%;"></div>
+                </div>
+              </td>
+              <td style="text-align: right; font-family: var(--font-mono); color: var(--text-parchment);">
+                {{ s.lifetime_hours }}h
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-style: italic;">No disciplines registered in the ledger yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

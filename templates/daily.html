@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Journal &mdash; The Scholar's Ledger{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-title">
+    <span>✦ Daily Academic Journal & Agenda</span>
+    <form method="GET" action="{{ url_for('daily_view') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+      <input type="text" name="date" class="form-control" style="width: 170px; padding: 0.35rem 0.6rem; font-size: 0.85rem;" value="{{ daily_data.date_str }}" placeholder="YYYY-MM-DD or today">
+      <button type="submit" class="btn btn-sm btn-gold">Inspect Date</button>
+    </form>
+  </div>
+
+  <!-- Header Stat Ribbon -->
+  <div class="grid-4" style="margin-bottom: 1.5rem;">
+    <div class="stat-ribbon">
+      <div class="stat-label">Journal Date</div>
+      <div class="stat-value gold" style="font-size: 1.25rem;">{{ daily_data.date.strftime('%b %d, %Y') }}</div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">{{ daily_data.date.strftime('%A') }}</div>
+    </div>
+    <div class="stat-ribbon">
+      <div class="stat-label">Hours Logged</div>
+      <div class="stat-value sage">{{ daily_data.summary.total_hours }}h</div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Across {{ daily_data.summary.sessions_count }} sessions</div>
+    </div>
+    <div class="stat-ribbon">
+      <div class="stat-label">Tasks Completed</div>
+      <div class="stat-value laurel">{{ daily_data.summary.tasks_completed }}</div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Finished today</div>
+    </div>
+    <div class="stat-ribbon">
+      <div class="stat-label">Deadlines Due</div>
+      <div class="stat-value">{{ daily_data.summary.tasks_due }}</div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Due on this date</div>
+    </div>
+  </div>
+
+  <!-- Discipline Distribution on this date -->
+  {% if daily_data.summary.subject_hours %}
+    <div style="background-color: var(--bg-card-hover); border: 1px solid var(--border-gold); border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+      <span style="font-family: var(--font-heading); color: var(--text-gold); font-size: 0.85rem;">✦ Discipline Hours:</span>
+      {% for subj, hrs in daily_data.summary.subject_hours.items() %}
+        <span style="font-size: 0.9rem;">
+          <strong style="color: var(--color-azure);">{{ subj }}:</strong>
+          <span style="font-family: var(--font-mono); color: var(--text-parchment);">{{ hrs }}h</span>
+        </span>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Section 1: Study Sessions Logged Today -->
+  <h3 style="font-family: var(--font-heading); color: var(--text-gold); font-size: 1.05rem; margin-bottom: 0.75rem;">
+    ✦ Study Sessions Logged ({{ daily_data.study_logs|length }})
+  </h3>
+  {% if daily_data.study_logs %}
+    <div class="table-responsive" style="margin-bottom: 2rem;">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th style="width: 60px; text-align: center;">Ref #</th>
+            <th style="width: 220px;">Discipline</th>
+            <th>Topic / Chapter Focus</th>
+            <th style="width: 120px; text-align: right;">Hours Spent</th>
+            <th>Reflections & Key Takeaways</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in daily_data.study_logs %}
+            <tr>
+              <td style="text-align: center; font-family: var(--font-mono); color: var(--text-gold);">{{ log.id }}</td>
+              <td style="font-weight: 600; color: var(--color-azure);">{{ log.subject }}</td>
+              <td>{{ log.topic }}</td>
+              <td style="text-align: right; font-family: var(--font-mono); color: var(--color-sage); font-weight: 700;">{{ log.hours_spent }}h</td>
+              <td style="font-style: italic; color: var(--text-muted);">{{ log.notes or "—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-style: italic; margin-bottom: 2rem;">
+      No study sessions logged for this calendar date.
+    </p>
+  {% endif %}
+
+  <!-- Section 2: Tasks Due on this date -->
+  <h3 style="font-family: var(--font-heading); color: var(--text-gold); font-size: 1.05rem; margin-bottom: 0.75rem;">
+    ✦ Assignments & Deadlines Due ({{ daily_data.tasks_due|length }})
+  </h3>
+  {% if daily_data.tasks_due %}
+    <div class="table-responsive">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th style="width: 60px; text-align: center;">Ref #</th>
+            <th>Discipline</th>
+            <th>Topic</th>
+            <th style="width: 100px; text-align: center;">Priority</th>
+            <th style="width: 110px; text-align: center;">Status</th>
+            <th style="width: 90px; text-align: right;">Est.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in daily_data.tasks_due %}
+            <tr>
+              <td style="text-align: center; font-family: var(--font-mono); color: var(--text-gold);">{{ t.id }}</td>
+              <td style="font-weight: 600; color: var(--color-azure);">{{ t.subject }}</td>
+              <td>{{ t.topic }}</td>
+              <td style="text-align: center;">
+                {% if t.priority.value == 'High' %}
+                  <span class="badge badge-high">▲ High</span>
+                {% elif t.priority.value == 'Medium' %}
+                  <span class="badge badge-medium">■ Med</span>
+                {% else %}
+                  <span class="badge badge-low">▽ Low</span>
+                {% endif %}
+              </td>
+              <td style="text-align: center;">
+                {% if t.status.value == 'Completed' %}
+                  <span class="badge badge-completed">✓ Done</span>
+                {% elif t.status.value == 'In Progress' %}
+                  <span class="badge badge-progress">◐ In Prog</span>
+                {% else %}
+                  <span class="badge badge-pending">○ Pending</span>
+                {% endif %}
+              </td>
+              <td style="text-align: right; font-family: var(--font-mono); color: var(--text-amber);">{{ t.estimated_hours }}h</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-style: italic;">
+      No assignments or task deadlines fell on this calendar date.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}
